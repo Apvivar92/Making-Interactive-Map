@@ -1,37 +1,38 @@
 // Create a map object
-var myMap = {
+const myMap = {
     coordinates: [],
     businesses: [],
     map: {},
     markers:{},
 
     //Leaflet map
-    buildMap(){
-        this.map = L.map('map', {
-        center: this.coordinates,
-        zoom: 15,
-        });
-        // Openstreetmap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution:
-                '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(this.map)
-
-        const marker = L.marker(this.coordinates)
-        marker
-            .addTo(this.map)
-            .blindPopup('<p1><b>You are here</b><br></p1>')
-            .openPopup()
-    },
-
+    buildMap() {
+		this.myMap = L.map('map', {
+		center: this.coordinates,
+		zoom: 11,
+		});
+		// add openstreetmap tiles
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		attribution:
+			'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+		minZoom: '15',
+		}).addTo(this.myMap)
+		// create and add geolocation marker
+		const marker = L.marker(this.coordinates)
+		marker
+		.addTo(this.myMap)
+		.bindPopup('<p1><b>You are here</b><br></p1>')
+		.openPopup()
+	},
+    //Business markers
     addMarkers() {
         for (var i = 0; i < this.businesses.length; i++){
             this.markers = L.marker([
                 this.businesses[i].lat,
                 this.businesses[i].long,
             ])
-                .blindPopup(`<p1>${this.businesses[i].name}</p1>`)
-                .addTo(this.map)
+                .bindPopup(`<p1>${this.businesses[i].name}</p1>`)
+                .addTo(this.myMap)
         }
     }
 }
@@ -54,13 +55,12 @@ async function getFoursquare(business) {
         }
     }
     let lat = myMap.coordinates[0];
-    let lon = myMap.coordinate[1];
-    let response = await fetch(`https://api.foursquare.com/v3/places/search?&query=${business}&ll=${lat}%2c$
-    {lon}`, options);
+    let lon = myMap.coordinates[1];
+    let response = await fetch(`https://api.foursquare.com/v3/places/search?&query=${business}&ll=${lat}%2c${lon}`, options);
     let data = await response.text();
     let parseData = JSON.parse(data);
-    let business = parseData.results;
-    return businesses
+    let businessLocation = parseData.results;
+    return businessLocation;
 };
 
 function processBusinesses (data) {
@@ -72,19 +72,19 @@ function processBusinesses (data) {
         };
         return location
     });
-    return businesses
+    return business
 };
 
 document.getElementById('submit').addEventListener('click', async(event) =>{
     event.preventDefault()
-    let business = document.getElementById('business').value;
-    let data = await getFoursquare(business);
-    myMap.business = processBusinesses(data)
+    let businessType = document.getElementById('businessType').value;
+    let data = await getFoursquare(businessType);
+    myMap.businesses = processBusinesses(data)
     myMap.addMarkers()
 });
 
-window.load = async () => {
+window.onload = async () => {
     const coords = await getCoords();
-    console.log(cooords);
-    myMap.coordinates = coordsmyMap.buildMap();
+    myMap.coordinates = coords;
+    myMap.buildMap();
 };
